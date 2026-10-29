@@ -28,6 +28,12 @@
         "projectId": "7717f29c-5b5f-4641-a41e-e8cf68fe53ad"
       }
     },
-    "owner": "rinpro123"
+    "owner": "rinpro123",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7717f29c-5b5f-4641-a41e-e8cf68fe53ad"
+    }
   }
 }
