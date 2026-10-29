@@ -20,6 +20,7 @@ interface ProfileScreenProps {
   onOpenHelpCenter: () => void;
   onOpenFavorites: () => void;
   onLogout: () => void;
+  onOpenAdmin?: () => void;
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({
@@ -29,8 +30,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onOpenHelpCenter,
   onOpenFavorites,
   onLogout,
+  onOpenAdmin,
 }) => {
-  const { profile, user, signOut, isConfigured } = useAuth();
+  const { profile, user, signOut, isConfigured, isAdmin, switchRoleDemo } = useAuth();
 
   const displayName = profile?.full_name || 'Nguyễn An';
   const displayEmail = profile?.email || user?.email || 'an.nguyen@example.com';
@@ -146,6 +148,46 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </View>
         </View>
 
+        {/* Admin Portal Entry Banner */}
+        <TouchableOpacity
+          style={styles.adminBanner}
+          activeOpacity={0.85}
+          onPress={onOpenAdmin}
+        >
+          <View style={styles.adminBannerIconBox}>
+            <Ionicons name="shield-checkmark" size={24} color="#FBBF24" />
+          </View>
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={styles.adminBannerTitle}>Trung Tâm Quản Trị</Text>
+              <View style={styles.adminPill}>
+                <Text style={styles.adminPillText}>ADMIN</Text>
+              </View>
+            </View>
+            <Text style={styles.adminBannerSub}>Quản lý bác sĩ, bệnh viện & duyệt lịch hẹn</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+
+        {/* Quick Role Switcher for Demo */}
+        <TouchableOpacity
+          style={styles.roleToggleRow}
+          activeOpacity={0.7}
+          onPress={() => {
+            const nextRole = isAdmin ? 'patient' : 'admin';
+            switchRoleDemo(nextRole);
+            Alert.alert(
+              'Chuyển đổi vai trò',
+              `Đã chuyển sang vai trò: ${nextRole === 'admin' ? 'Quản Trị Viên (Admin)' : 'Bệnh Nhân (Patient)'}`
+            );
+          }}
+        >
+          <Ionicons name="swap-horizontal" size={16} color={colors.primary} style={{ marginRight: 6 }} />
+          <Text style={styles.roleToggleText}>
+            {isAdmin ? 'Đổi sang vai trò Bệnh nhân' : 'Kích hoạt quyền Quản Trị Viên (Admin)'}
+          </Text>
+        </TouchableOpacity>
+
         {/* Menu Items List */}
         <View style={styles.menuContainer}>
           {menuItems.map((item) => (
@@ -250,6 +292,68 @@ const styles = StyleSheet.create({
   backendBadgeText: {
     fontSize: 11,
     fontWeight: '600',
+  },
+  adminBanner: {
+    marginHorizontal: 20,
+    marginBottom: 12,
+    backgroundColor: '#0F172A',
+    borderRadius: 18,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  adminBannerIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  adminBannerTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  adminPill: {
+    backgroundColor: 'rgba(251, 191, 36, 0.2)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginLeft: 6,
+  },
+  adminPillText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#FBBF24',
+    letterSpacing: 0.5,
+  },
+  adminBannerSub: {
+    fontSize: 12,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  roleToggleRow: {
+    marginHorizontal: 20,
+    marginBottom: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  roleToggleText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.primary,
   },
   menuContainer: {
     paddingHorizontal: 20,

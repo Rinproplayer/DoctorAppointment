@@ -27,7 +27,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onGoToRegister,
   onForgotPassword,
 }) => {
-  const { signIn, isConfigured } = useAuth();
+  const { signIn, isConfigured, switchRoleDemo } = useAuth();
   const [email, setEmail] = useState('an.nguyen@gmail.com');
   const [password, setPassword] = useState('123456');
   const [showPassword, setShowPassword] = useState(false);
@@ -161,6 +161,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             >
               <Ionicons name="sparkles-outline" size={16} color={colors.primary} style={{ marginRight: 6 }} />
               <Text style={styles.demoBtnText}>Trải nghiệm nhanh không cần đăng nhập</Text>
+            </TouchableOpacity>
+
+            {/* Quick Admin Entry */}
+            <TouchableOpacity
+              style={[styles.demoBtn, { borderColor: '#C4B5FD', backgroundColor: '#F5F3FF', marginTop: 8 }]}
+              activeOpacity={0.8}
+              onPress={() => {
+                switchRoleDemo('admin');
+                onLoginSuccess();
+              }}
+            >
+              <Ionicons name="shield-checkmark" size={16} color="#7C3AED" style={{ marginRight: 6 }} />
+              <Text style={[styles.demoBtnText, { color: '#7C3AED' }]}>Vào nhanh với quyền Admin (Quản trị)</Text>
             </TouchableOpacity>
 
             {/* Social Logins */}

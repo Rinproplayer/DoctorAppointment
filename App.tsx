@@ -21,6 +21,7 @@ import { VideoCallScreen } from './src/screens/VideoCallScreen';
 import { WalletScreen } from './src/screens/WalletScreen';
 import { VouchersScreen } from './src/screens/VouchersScreen';
 import { SearchFilterModal } from './src/screens/SearchFilterModal';
+import { AdminDashboardScreen } from './src/screens/AdminDashboardScreen';
 import { BottomNav, TabType } from './src/components/BottomNav';
 import { doctorsData, Doctor } from './src/data/doctors';
 import { hospitalsData, Hospital } from './src/data/hospitals';
@@ -41,7 +42,8 @@ type ScreenType =
   | 'video_call'
   | 'wallet'
   | 'vouchers'
-  | 'search_filter';
+  | 'search_filter'
+  | 'admin_dashboard';
 
 function MainNavigator() {
   const { user } = useAuth();
@@ -170,6 +172,7 @@ function MainNavigator() {
               onOpenHelpCenter={() => setCurrentScreen('search_filter')}
               onOpenFavorites={() => setCurrentTab('home')}
               onLogout={() => setCurrentScreen('login')}
+              onOpenAdmin={() => setCurrentScreen('admin_dashboard')}
             />
           )}
 
@@ -233,6 +236,10 @@ function MainNavigator() {
           onSelectDoctor={handleOpenDoctor}
           onSelectHospital={handleOpenHospital}
         />
+      )}
+
+      {currentScreen === 'admin_dashboard' && (
+        <AdminDashboardScreen onBack={() => setCurrentScreen('main')} />
       )}
     </View>
   );

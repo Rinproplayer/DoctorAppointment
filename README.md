@@ -63,3 +63,22 @@ cd d:\appUIUX\DoctorAppointment
 - **Chạy trên Web:** `npm run web`
 - **Chạy trên điện thoại qua Expo Go:** `npx expo start`
 - **Chạy trên máy ảo Android:** `npm run android`
+
+
+---
+
+## 👑 Phân Quyền Vai Trò (RBAC) & Trung Tâm Quản Trị (Admin Portal)
+
+Dự án hỗ trợ hệ thống phân quyền chuyên sâu:
+- **`patient` (Bệnh nhân):** Xem danh sách bác sĩ/bệnh viện, đặt lịch khám, quản lý lịch của mình, nạp ví cá nhân.
+- **`admin` (Quản trị viên):** Có toàn quyền xem và điều hành hệ thống:
+  - 📊 **Thống kê KPI:** Tổng số người dùng, bác sĩ, lịch hẹn và tổng doanh thu.
+  - 📅 **Quản lý lịch khám:** Xem tất cả lịch khám toàn hệ thống, duyệt nhanh (`Duyệt` / `Hoàn tất` / `Hủy`).
+  - 👨‍⚕️ **Quản lý bác sĩ:** Thêm bác sĩ mới, cập nhật thông tin hoặc xóa bác sĩ.
+  - 🏥 **Quản lý bệnh viện:** Thêm cơ sở y tế và bệnh viện mới.
+  - 👥 **Quản lý người dùng & phân quyền:** Cấp quyền Quản trị viên (Admin) hoặc hạ quyền xuống Bệnh nhân.
+
+### Kích hoạt tài khoản Admin trên Supabase Database
+1. Mở **Supabase Dashboard** -> menu **SQL Editor**.
+2. Chạy nội dung file [`supabase_admin_rbac.sql`](./supabase_admin_rbac.sql).
+3. Script sẽ tự động bổ sung cột `role`, hàm bảo mật `public.is_admin()`, thiết lập các chính sách RLS nâng cao và gán quyền Admin cho tài khoản của bạn.

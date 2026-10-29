@@ -9,19 +9,27 @@ export interface UserProfile {
   email: string;
   phone?: string;
   avatar_url?: string;
+  role?: 'patient' | 'doctor' | 'admin';
 }
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: UserProfile | null;
+  isAdmin: boolean;
   isLoading: boolean;
   isConfigured: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ success: boolean; error?: string; needVerification?: boolean }>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    role?: 'patient' | 'doctor' | 'admin'
+  ) => Promise<{ success: boolean; error?: string; needVerification?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   verifyOtp: (email: string, token: string) => Promise<{ success: boolean; error?: string }>;
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
+  switchRoleDemo: (newRole: 'patient' | 'doctor' | 'admin') => void;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -36,13 +44,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isConfigured = isSupabaseConfigured();
 
   // Load profile from Supabase
-  const fetchProfile = async (userId: string, userEmail: string, metaName?: string) => {
+  const fetchProfile = async (userId: string, userEmail: string, metaName?: string, metaRole?: string) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
+
+      const defaultRole = (userEmail.toLowerCase().includes('admin') || metaRole === 'admin') ? 'admin' : 'patient';
 
       if (data && !error) {
         setProfile({
@@ -51,12 +61,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: data.email || userEmail,
           phone: data.phone,
           avatar_url: data.avatar_url,
+          role: (data.role as any) || defaultRole,
         });
       } else {
         setProfile({
           id: userId,
           full_name: metaName || 'Nguyễn An',
           email: userEmail,
+          role: defaultRole,
         });
       }
     } catch {
@@ -64,6 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: userId,
         full_name: metaName || 'Nguyễn An',
         email: userEmail,
+        role: userEmail.toLowerCase().includes('admin') ? 'admin' : 'patient',
       });
     }
   };
@@ -75,7 +88,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          fetchProfile(session.user.id, session.user.email ?? '', session.user.user_metadata?.full_name);
+          fetchProfile(
+            session.user.id,
+            session.user.email ?? '',
+            session.user.user_metadata?.full_name,
+            session.user.user_metadata?.role
+          );
         }
         setIsLoading(false);
       });
@@ -84,7 +102,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          fetchProfile(session.user.id, session.user.email ?? '', session.user.user_metadata?.full_name);
+          fetchProfile(
+            session.user.id,
+            session.user.email ?? '',
+            session.user.user_metadata?.full_name,
+            session.user.user_metadata?.role
+          );
         } else {
           setProfile(null);
         }
@@ -110,7 +133,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [isConfigured]);
 
   // 1. ĐĂNG KÝ
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    fullName: string,
+    role: 'patient' | 'doctor' | 'admin' = 'patient'
+  ) => {
     setIsLoading(true);
     try {
       if (!email.trim() || !password.trim()) {
@@ -122,6 +150,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, error: 'Mật khẩu phải có tối thiểu 6 ký tự' };
       }
 
+      const assignedRole = email.toLowerCase().includes('admin') ? 'admin' : role;
+
       if (isConfigured) {
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
@@ -129,6 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           options: {
             data: {
               full_name: fullName.trim() || 'Nguyễn An',
+              role: assignedRole,
             },
           },
         });
@@ -150,6 +181,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: `demo-user-${Date.now()}`,
           full_name: fullName.trim() || 'Nguyễn An',
           email: email.trim(),
+          role: assignedRole,
         };
         await AsyncStorage.setItem(DEMO_USER_KEY, JSON.stringify(mockProfile));
         setProfile(mockProfile);
@@ -186,15 +218,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(data.session);
         setUser(data.user);
         if (data.user) {
-          fetchProfile(data.user.id, data.user.email ?? '', data.user.user_metadata?.full_name);
+          fetchProfile(
+            data.user.id,
+            data.user.email ?? '',
+            data.user.user_metadata?.full_name,
+            data.user.user_metadata?.role
+          );
         }
         return { success: true };
       } else {
         // Demo Mode Sign In
         const mockProfile: UserProfile = {
           id: 'demo-user-1',
-          full_name: 'Nguyễn An',
+          full_name: email.toLowerCase().includes('admin') ? 'Quản Trị Viên (Admin)' : 'Nguyễn An',
           email: email.trim(),
+          role: email.toLowerCase().includes('admin') ? 'admin' : 'patient',
         };
         await AsyncStorage.setItem(DEMO_USER_KEY, JSON.stringify(mockProfile));
         setProfile(mockProfile);
@@ -267,12 +305,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // 6. CHUYỂN ĐỔI ROLE NHANH CHO DEMO / TESTING
+  const switchRoleDemo = (newRole: 'patient' | 'doctor' | 'admin') => {
+    const current = profile || {
+      id: 'demo-user-1',
+      full_name: 'Nguyễn An',
+      email: 'an.nguyen@gmail.com',
+    };
+    const updated: UserProfile = {
+      ...current,
+      role: newRole,
+      full_name: newRole === 'admin' ? 'Quản Trị Viên (Admin)' : 'Nguyễn An',
+    };
+    setProfile(updated);
+    AsyncStorage.setItem(DEMO_USER_KEY, JSON.stringify(updated));
+  };
+
+  const isAdmin = Boolean(
+    profile?.role === 'admin' ||
+    profile?.email?.toLowerCase().includes('admin') ||
+    user?.email?.toLowerCase().includes('admin')
+  );
+
   return (
     <AuthContext.Provider
       value={{
         user,
         session,
         profile,
+        isAdmin,
         isLoading,
         isConfigured,
         signUp,
@@ -280,6 +341,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signOut,
         verifyOtp,
         resetPassword,
+        switchRoleDemo,
       }}
     >
       {children}
